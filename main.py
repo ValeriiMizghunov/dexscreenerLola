@@ -1,27 +1,34 @@
 import requests
-from telegram import Bot
 from datetime import datetime, timezone
 import time
+import traceback
 
-# 🔐 Твои данные
-TOKEN = "7570198764:AAHHQQCc0ZDzyYRnDPPjxVFe-020KXhUYXc"        
-CHAT_ID = "5949980225"          
+TOKEN = 7570198764:AAHHQQCc0ZDzyYRnDPPjxVFe-020KXhUYXc
+CHAT_ID = 5949980225  
 
-bot = Bot(token=TOKEN)
-
-# ✅ Получение токенов
-def fetch_new_tokens():
-    url = "https://api.dexscreener.com/latest/dex/pairs"  # или /solana и т.д.
+def send_message(text):
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json().get("pairs", [])
-        return data
+        url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+        payload = {
+            "chat_id": CHAT_ID,
+            "text": text,
+            "parse_mode": "HTML"
+        }
+        requests.post(url, data=payload)
     except Exception as e:
-        bot.send_message(chat_id=CHAT_ID, text=f"❌ Ошибка при запросе к API:\n{e}")
+        print(f"Ошибка отправки в Telegram: {e}")
+
+def fetch_new_tokens():
+    try:
+        url = "https://api.dexscreener.com/latest/dex/pairs"
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(f"Ошибка при запросе к API: {response.status_code}")
+        return response.json().get("pairs", [])
+    except Exception as e:
+        send_message(f"❌ Ошибка при запросе:\n<pre>{traceback.format_exc()}</pre>")
         return []
 
-# ✅ Фильтрация по условиям
 def filter_tokens(tokens):
     results = []
     now = datetime.now(timezone.utc)
@@ -31,27 +38,25 @@ def filter_tokens(tokens):
             created_at = datetime.fromtimestamp(token["pairCreatedAt"] / 1000, tz=timezone.utc)
             age_minutes = (now - created_at).total_seconds() / 60
             info_links = [token.get("info", {}).get("website"), token.get("info", {}).get("telegram")]
-
             if cap and cap <= 50000 and age_minutes <= 10 and any(info_links):
                 results.append(token)
         except Exception as e:
+            send_message(f"⚠️ Ошибка в фильтрации:\n<pre>{traceback.format_exc()}</pre>")
             continue
     return results
 
-# ✅ Отправка алертов в Telegram
 def send_alerts(tokens):
     for token in tokens:
         try:
             msg = (
                 f"🚀💥 Новый токен: {token['baseToken']['symbol']}\n"
-                f"Капа: {token.get('fdv', '❓')}$\n"
-                f"{token.get('url', 'Нет ссылки')}"
+                f"Капитализация: {token['fdv']}$\n"
+                f"Ссылка: {token['url']}"
             )
-            bot.send_message(chat_id=CHAT_ID, text=msg)
+            send_message(msg)
         except Exception as e:
-            bot.send_message(chat_id=CHAT_ID, text=f"❌ Ошибка при отправке алерта:\n{e}")
+            send_message(f"⚠️ Ошибка при отправке токена:\n<pre>{traceback.format_exc()}</pre>")
 
-# 🔁 Цикл: каждые 60 секунд
 while True:
     new_tokens = fetch_new_tokens()
     filtered = filter_tokens(new_tokens)
