@@ -1,12 +1,11 @@
-
 import requests
 from telegram import Bot
 from datetime import datetime, timezone
 import time
-import json
 
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"
+TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"  # <-- Заменить на переменную окружения, если используешь Railway
+CHAT_ID = "YOUR_TELEGRAM_CHAT_ID"  # <-- Тоже заменить на переменную
+
 bot = Bot(token=TOKEN)
 
 def fetch_new_tokens():
@@ -23,7 +22,10 @@ def filter_tokens(tokens):
             cap = token.get("fdv", 0)
             created_at = datetime.fromtimestamp(token["pairCreatedAt"] / 1000, tz=timezone.utc)
             age_minutes = (now - created_at).total_seconds() / 60
-            info_links = [token.get("info", {}).get("website"), token.get("info", {}).get("telegram")]
+            info_links = [
+                token.get("info", {}).get("website"),
+                token.get("info", {}).get("telegram")
+            ]
             if cap and cap <= 50000 and age_minutes <= 10 and any(info_links):
                 results.append(token)
         except:
@@ -33,9 +35,10 @@ def filter_tokens(tokens):
 def send_alerts(tokens):
     for token in tokens:
         msg = (
-    f"🚀💥 Новый токен: {token['baseToken']['symbol']}\n"
-    f"Kana: {token['fdv']}$\n"
-    f"{token['url']}"
+            f"🚀💥 Новый токен: {token['baseToken']['symbol']}\n"
+            f"Капа: {token['fdv']}$\n"
+            f"{token['url']}"
+        )
         bot.send_message(chat_id=CHAT_ID, text=msg)
 
 while True:
