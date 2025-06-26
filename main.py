@@ -3,8 +3,8 @@ from datetime import datetime, timezone
 import time
 import traceback
 
-TOKEN = 7570198764:AAHHQQCc0ZDzyYRnDPPjxVFe-020KXhUYXc
-CHAT_ID = 5949980225  
+TOKEN = "7570198764:AAHHQQcC2D2yyVRnDPpjXvFe-020kXhUYxC"
+CHAT_ID = "5949980225"
 
 def send_message(text):
     try:
