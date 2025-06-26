@@ -32,9 +32,10 @@ def filter_tokens(tokens):
 
 def send_alerts(tokens):
     for token in tokens:
-        msg = f"🚀 Новый токен: {token['baseToken']['symbol']}
-Капа: {token['fdv']}$
-🔗 {token['url']}"
+        msg = (
+    f"🚀💥 Новый токен: {token['baseToken']['symbol']}\n"
+    f"Kana: {token['fdv']}$\n"
+    f"{token['url']}"
         bot.send_message(chat_id=CHAT_ID, text=msg)
 
 while True:
