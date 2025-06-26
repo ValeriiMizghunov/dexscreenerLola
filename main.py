@@ -11,7 +11,17 @@ bot = Bot(token=TOKEN)
 def fetch_new_tokens():
     url = "https://api.dexscreener.com/latest/dex/pairs"
     response = requests.get(url)
-    data = response.json().get("pairs", [])
+
+    if response.status_code != 200:
+        print(f"Ошибка при запросе к API: {response.status_code}")
+        return []
+
+    try:
+        data = response.json().get("pairs", [])
+    except Exception as e:
+        print(f"Ошибка при разборе JSON: {e}")
+        return []
+
     return data
 
 def filter_tokens(tokens):
